@@ -1,22 +1,23 @@
 # API PARA APP DESBLOQUEATUCELL
 ## url y Metodos:
 ### CRUD
-  GET  https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE TABLA BD]
-  GET  https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE TABLA BD]&id=[ID REGISTRO]
+    GET  https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE-TABLA-BD]
 
-  POST https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE TABLA BD]
-    {
-		id: number,
-		"name: string,
-		drSimID: string
-	}
+    GET  https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE-TABLA-BD]&id=[ID-REGISTRO]
 
-  PUT https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE TABLA BD]
-    {
-		id: number,
-		"name: string,
-		drSimID: string
-	}
+    POST https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE-TABLA-BD]
+        {
+            id: number,
+            name: string,
+            drSimID: string
+        }
+
+    PUT https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE-TABLA-BD]
+        {
+            id: number,
+            name: string,
+            drSimID: string
+        }
 
 ### DRSIM - STRIPE: PAGAR
     POST https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?endpoint=create-checkout-session
