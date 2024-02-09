@@ -1,5 +1,9 @@
 const { app } = require('@azure/functions');
 const mysql = require('promise-mysql');
+const axios = require('axios');
+
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPESECRETKEY);
 
 app.http('httpTriggerBackendDesbloqueamicell', {
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -22,6 +26,7 @@ app.http('httpTriggerBackendDesbloqueamicell', {
             });
             const id = request.query.get('id');
             const tab = request.query.get('tab');
+            const endPoint = request.query.get('endpoint');
             switch (request.method) {
                 case "GET":                                       
                     const responseGet = await getItem(connection, tab,  id);
@@ -30,14 +35,23 @@ app.http('httpTriggerBackendDesbloqueamicell', {
                     };
                     break;
                 
-                case "POST":                    
+                case "POST":
                     const requestDataPost = JSON.parse(await request.text());
                     if (requestDataPost) {
-                        const resultInsert = await saveData(connection, requestDataPost, tab);
-                        context.res = {                            
-                            body: {id: resultInsert.insertId},
-                            statusCode: 200,
-                        };
+                        if (endPoint && endPoint == 'create-checkout-session'){
+                            const createSession = await createCheckoutSession(requestDataPost);
+                            console.log(createSession);
+                            context.res = {                            
+                                body: JSON.stringify(createSession),
+                                statusCode: 200,
+                            };
+                        } else {
+                            const resultInsert = await saveData(connection, requestDataPost, tab);
+                            context.res = {                            
+                                body: {id: resultInsert.insertId},
+                                statusCode: 200,
+                            };
+                        }    
                     } else {
                         context.res = {                        
                             body: 'Revise el Cuerpo del Post',
@@ -53,7 +67,7 @@ app.http('httpTriggerBackendDesbloqueamicell', {
                             const resultUpdate = await updateData(connection, requestDataPut, tab);
                             context.log(resultUpdate);
                             context.res = {                            
-                                body: resultUpdate,
+                                body: JSON.stringify(resultUpdate),
                                 statusCode: 200,
                             };
                         } else {
@@ -83,6 +97,41 @@ app.http('httpTriggerBackendDesbloqueamicell', {
         }        
     }
 });
+
+async function createCheckoutSession(postRequest){
+    const urlTool = `https://api.doctorsim.com/tools/${postRequest.id_terminal}/${postRequest.id_operador}`;
+    try {
+        const responseTools = await sendHttpRequestDRSIM(urlTool);
+        const tools = responseTools.res.tools;
+        var tool;
+        for await (const item of tools) {
+            if (item.id_tool === postRequest.id_service) {
+                tool = item;
+                break;
+            }
+        }
+        return tool;
+    } catch (error) {
+        console.log({function: 'createCheckoutSession', error: error});
+        return tool={};
+    }    
+}
+
+const sendHttpRequestDRSIM = async (url) => {
+    try {
+      const response = await axios.get(url, {
+        headers: {
+            DSIM_KEY: process.env.DSIM_KEY,
+            DSIM_SECRET: process.env.DRSIM_SECRET,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('DRSIM error:', error);
+      return null;
+    }
+};
 
 async function getItem(connection, tableName, id) {
     try {
