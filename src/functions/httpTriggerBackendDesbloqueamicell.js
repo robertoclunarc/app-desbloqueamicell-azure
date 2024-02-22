@@ -1,9 +1,18 @@
 const { app } = require('@azure/functions');
 const mysql = require('promise-mysql');
 const axios = require('axios');
-
 const Stripe = require('stripe');
-const stripe = Stripe(process.env.STRIPESECRETKEY);
+
+const STRIPESECRETKEY = process.env.STRIPESECRETKEY;
+const apiDrSimCreateOrden = process.env.apiDrSimCreateOrden;
+const DSIM_KEY = process.env.DSIM_KEY;
+const DRSIM_SECRET = process.env.DRSIM_SECRET;
+const DBHOST = process.env.DBHOST;
+const DBUSER = process.env.DBUSER;
+const DBPASSW = process.env.DBPASSW;
+const DBNAME = process.env.DBNAME;
+
+const stripe = Stripe(STRIPESECRETKEY);
 
 app.http('httpTriggerBackendDesbloqueamicell', {
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -16,10 +25,10 @@ app.http('httpTriggerBackendDesbloqueamicell', {
 
         try {
             const connection = await mysql.createPool({
-                host: 'serverchatbotmysql.mysql.database.azure.com',
-                user: 'adminchatbot',
-                password: 'd9AMmyVBS9fdXP',
-                database: 'azuredbchatbot',
+                host: DBHOST,
+                user: DBUSER,
+                password: DBPASSW,
+                database: DBNAME,
                 ssl: {ca: `${rutaAlArchivo}`,
                         rejectUnauthorized: false,
                     },
@@ -105,8 +114,7 @@ app.http('httpTriggerBackendDesbloqueamicell', {
     }
 });
 
-async function validateCheckout(connection, sessionId){
-    const apiDrSimCreateOrden =process.env.apiDrSimCreateOrden; 
+async function validateCheckout(connection, sessionId){     
     const reqGetOrdenDB = await getItem(connection, 'ordenes',  sessionId)
     const ticket = reqGetOrdenDB[0];
     console.log(ticket);
@@ -114,7 +122,7 @@ async function validateCheckout(connection, sessionId){
     //console.log(sessionDetails);
     if (ticket?.id && ticket?.id_ticket === 'none' && sessionDetails.payment_status === 'unpaid') {
         console.log('El pago se ha concretado con exito. Actualizando el estatus en la API de tickets...');
-        console.log('https://api.doctorsim.com/create_order/{id_terminal}/{id_operador}/{imei}/{id_servicio}')
+        console.log(`${apiDrSimCreateOrden}/${ticket.id_terminal}/${ticket.id_operador}/${ticket.imei}/${ticket.id_service}`);
         const urlCreateTicket = `${apiDrSimCreateOrden}/${ticket.id_terminal}/${ticket.id_operador}/${ticket.imei}/${ticket.id_service}`;
         console.log(urlCreateTicket)
         const reqDrSimCreateOrden = await sendPostRequestDRSIM(urlCreateTicket);
@@ -164,7 +172,7 @@ const getStripeSessionDetails = async (sessionId) => {
     try {
       const response = await axios.get(apiUrl, {
         headers: {
-            Authorization: `Bearer ${process.env.STRIPESECRETKEY}`,
+            Authorization: `Bearer ${STRIPESECRETKEY}`,
         },
       });
 
@@ -263,8 +271,8 @@ const sendHttpRequestDRSIM = async (url) => {
     try {
       const response = await axios.get(url, {
         headers: {
-            DSIM_KEY: process.env.DSIM_KEY,
-            DSIM_SECRET: process.env.DRSIM_SECRET,
+            DSIM_KEY: DSIM_KEY,
+            DSIM_SECRET: DRSIM_SECRET,
         },
       });
 
@@ -278,12 +286,12 @@ const sendHttpRequestDRSIM = async (url) => {
 const sendPostRequestDRSIM = async (url, body) => {
     console.log({
                 url: url,
-                DSIM_KEY: process.env.DSIM_KEY,
-                DSIM_SECRET: process.env.DRSIM_SECRET,
+                DSIM_KEY: DSIM_KEY,
+                DSIM_SECRET: DRSIM_SECRET,
             });
     const headers = {
-        DSIM_KEY: process.env.DSIM_KEY,
-        DSIM_SECRET: process.env.DRSIM_SECRET
+        DSIM_KEY: DSIM_KEY,
+        DSIM_SECRET: DRSIM_SECRET
     };        
     try {
         const response = await axios.post(url, null, { headers });
