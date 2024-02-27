@@ -3,7 +3,7 @@
 ### CRUD
     GET  https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE-TABLA-BD]
 
-    GET  https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE-TABLA-BD]&id=[ID-REGISTRO]
+    GET  https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE-TABLA-BD]&valor=[VALOR-REGISTRO]&field=[NOMBRE_CAMPO_DE_LA_TABLA]
 
     POST https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?tab=[NOMBRE-TABLA-BD]
         {
@@ -18,6 +18,11 @@
             name: string,
             drSimID: string
         }
+
+    PUT https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell
+        {
+            "migrar": "ALL"
+        }    
 
 ### DRSIM - STRIPE: PAGAR
     POST https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?endpoint=create-checkout-session

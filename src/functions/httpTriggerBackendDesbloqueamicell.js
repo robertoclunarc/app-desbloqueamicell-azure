@@ -34,18 +34,19 @@ app.http('httpTriggerBackendDesbloqueamicell', {
                         rejectUnauthorized: false,
                     },
             });
-            const id = request.query.get('id');
+            const valor = request.query.get('valor');
+            const field = request.query.get('field');
             const tab = request.query.get('tab');
             const endPoint = request.query.get('endpoint');
             switch (request.method) {
                 case "GET":
                     if (endPoint && endPoint == 'checkout'){
-                        const responseCheckout = await validateCheckout(connection, id);
+                        const responseCheckout = await validateCheckout(connection, valor);
                         context.res = {
                             body: JSON.stringify(responseCheckout)
                         }
                     }else{
-                        const responseGet = await getItem(connection, tab,  id);
+                        const responseGet = await getItem(connection, tab, field,  valor);
                         context.res = {
                             body: JSON.stringify(responseGet),
                         };
@@ -122,7 +123,7 @@ app.http('httpTriggerBackendDesbloqueamicell', {
 });
 
 async function validateCheckout(connection, sessionId){     
-    const reqGetOrdenDB = await getItem(connection, 'ordenes',  sessionId)
+    const reqGetOrdenDB = await getItem(connection, 'ordenes', 'id',  sessionId)
     const ticket = reqGetOrdenDB[0];
     console.log(ticket);
     const sessionDetails = await getStripeSessionDetails(ticket?.id_session);
@@ -295,17 +296,18 @@ const sendPostRequestDRSIM = async (url, body) => {
     }
 };
 
-async function getItem(connection, tableName, id) {
+async function getItem(connection, tableName, field, valor) {
     try {
-        if (id === undefined || id === null) {            
+        if (valor === undefined || valor === null) {            
             query = `SELECT * FROM ${tableName}`;
             params = [];
         } else {            
-            query = `SELECT * FROM ${tableName} WHERE id = ?`;
-            params = [id];
+            query = `SELECT * FROM ${tableName} WHERE ${field} = ?`;
+            params = [valor];
         }
       
         const results = await connection.query(query, params);
+        console.log(results);
         return results;
     } catch (error) {
         throw error;
@@ -357,7 +359,7 @@ async function saveDataFromAPI(connection) {
         
         for (const data of dataFromAPI) {
             let porMigrar = [];
-            /*if (data.tableName === 'paises'){
+            if (data.tableName === 'paises'){
                 const responsePaises = await sendHttpRequestDRSIM(data.url); 
                 porMigrar = await saveDataFromApiPaises(connection, data, responsePaises);
                 migrado.paises = porMigrar;
@@ -366,7 +368,7 @@ async function saveDataFromAPI(connection) {
                 const responseOperadoras = await sendHttpRequestDRSIM(data.url); 
                 porMigrar = await saveDataFromApiOperadoras(connection, data, responseOperadoras);
                 migrado.operadoras = porMigrar;
-            }*/
+            }
             if (data.tableName === 'marcas_celulares'){
                 const responseMarcas = await sendHttpRequestDRSIM(data.url); 
                 porMigrar = await saveDataFromApiMarcas(connection, data, responseMarcas);
