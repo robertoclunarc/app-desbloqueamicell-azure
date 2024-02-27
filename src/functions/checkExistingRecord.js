@@ -99,6 +99,78 @@ async function saveDataFromApiOperadoras(connection, apis, dataFromApi) {
     }
 }
 
+async function saveDataFromApiMarcas(connection, apis, dataFromApi) {
+    try {  
+        let marcas = [];
+        if (dataFromApi) {
+            // Iterar sobre los datos obtenidos del API
+            for (const brandId in dataFromApi.res) {
+                if (Object.hasOwnProperty.call(dataFromApi.res, brandId)) {
+                    const brandData = dataFromApi.res[brandId];
+                    const brandName = brandData.brand;
+                    const brandDesc = brandData.desc;
+                    console.log(`IDMarca: ${brandId}, NombreMarca: ${brandName}, Descripcion: ${brandDesc}`);                            
+                    // Verificar si el registro ya existe en la base de datos
+                    const existingRecord = await checkExistingRecord(connection, apis.tableName, brandId, brandName);
+                    let data = { nombre: brandName, drSimID: brandId, descripcion: brandDesc };
+                    if (!existingRecord) {                                                               
+                        // Si el registro no existe, guardarlo en la base de datos
+                        marcas.push(data);                                
+                        console.log(`Registro por insertar en la base de datos>> ${apis.tableName}: ${JSON.stringify(data)}`);
+                        await saveData(connection, data, apis.tableName);
+                    }else{
+                        console.log(`Registro ya existe en la base de datos>> ${apis.tableName}: ${JSON.stringify(data)}`);
+                    }                    
+                }       
+            }
+            return marcas;
+        } else {
+            console.error(`No se pudieron obtener datos del API: ${apis.url}`);
+        }
+    } catch (error) {
+        console.error('Error en la funcion saveDataFromApiMarcas:', error);
+    }
+}
+
+async function saveDataFromApiModelos(connection, apis, dataFromApi) {
+    try {  
+        let modelos = [];
+        if (dataFromApi) {
+            // Iterar sobre los datos obtenidos del API
+            for (const brandId in dataFromApi.res) {
+                if (Object.hasOwnProperty.call(dataFromApi.res, brandId)) {
+                    const deviceData = dataFromApi.res[brandId];
+                    for (const modelId in deviceData) {
+                        if (Object.hasOwnProperty.call(deviceData, modelId)) {
+                            const modelData = deviceData[modelId];
+                            const deviceName = modelData.name;
+                            const deviceImg = modelData.img;
+                            const deviceDesc = modelData.desc;
+                            console.log(`IDMarca: ${brandId}, IDModelo: ${modelId}, NombreDispositivo: ${deviceName}, Imagen: ${deviceImg}, Descripcion: ${deviceDesc}`);                           
+                            // Verificar si el registro ya existe en la base de datos
+                            const existingRecord = await checkExistingRecord(connection, apis.tableName, modelId, deviceName);
+                            let data = { nombre: deviceName, drSimID: modelId, descripcion: deviceDesc, imagen: deviceImg, marcasDrSimID: brandId };
+                            if (!existingRecord) {                                                               
+                                // Si el registro no existe, guardarlo en la base de datos
+                                modelos.push(data);
+                                console.log(`Registro por insertar en la base de datos>> ${apis.tableName}: ${JSON.stringify(data)}`);
+                                await saveData(connection, data, apis.tableName);
+                            }else{
+                                console.log(`Registro ya existe en la base de datos>> ${apis.tableName}: ${JSON.stringify(data)}`);
+                            }
+                        }    
+                    }
+                }       
+            }
+            return modelos;
+        } else {
+            console.error(`No se pudieron obtener datos del API: ${apis.url}`);
+        }
+    } catch (error) {
+        console.error('Error en la funcion saveDataFromApiModelos:', error);
+    }
+}
+
 async function saveData(connection, values, tableName) {
     const insertQuery = await buildInsertCommandFromJSON(tableName, values);    
     const valuesArray = Object.values(values);    
@@ -130,4 +202,4 @@ const buildInsertCommandFromJSON = async (tableName, values) => {
 }
 
 
-module.exports = { checkExistingRecord, buildUpdateCommandFromJSON, formatDateString, saveDataFromApiPaises, saveDataFromApiOperadoras, saveData };
+module.exports = { checkExistingRecord, buildUpdateCommandFromJSON, formatDateString, saveDataFromApiPaises, saveDataFromApiOperadoras, saveData, saveDataFromApiMarcas, saveDataFromApiModelos };

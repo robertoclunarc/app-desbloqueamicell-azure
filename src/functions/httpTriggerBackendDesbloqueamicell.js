@@ -2,7 +2,7 @@ const { app } = require('@azure/functions');
 const mysql = require('promise-mysql');
 const axios = require('axios');
 const Stripe = require('stripe');
-const { buildUpdateCommandFromJSON, formatDateString, saveDataFromApiPaises, saveDataFromApiOperadoras, saveData } = require('./checkExistingRecord');
+const { buildUpdateCommandFromJSON, formatDateString, saveDataFromApiPaises, saveDataFromApiOperadoras, saveData, saveDataFromApiMarcas, saveDataFromApiModelos } = require('./checkExistingRecord');
 
 const STRIPESECRETKEY = process.env.STRIPESECRETKEY;
 const apiDrSimCreateOrden = process.env.apiDrSimCreateOrden;
@@ -352,12 +352,12 @@ async function saveDataFromAPI(connection) {
             tableName: 'dispositivos_celulares',
         }
     ];
-    let migrado = { paises: [], operadoras: []};
+    let migrado = { paises: [], operadoras: [], marcas: [], modelos: []};
     try {
         
         for (const data of dataFromAPI) {
             let porMigrar = [];
-            if (data.tableName === 'paises'){
+            /*if (data.tableName === 'paises'){
                 const responsePaises = await sendHttpRequestDRSIM(data.url); 
                 porMigrar = await saveDataFromApiPaises(connection, data, responsePaises);
                 migrado.paises = porMigrar;
@@ -366,7 +366,18 @@ async function saveDataFromAPI(connection) {
                 const responseOperadoras = await sendHttpRequestDRSIM(data.url); 
                 porMigrar = await saveDataFromApiOperadoras(connection, data, responseOperadoras);
                 migrado.operadoras = porMigrar;
+            }*/
+            if (data.tableName === 'marcas_celulares'){
+                const responseMarcas = await sendHttpRequestDRSIM(data.url); 
+                porMigrar = await saveDataFromApiMarcas(connection, data, responseMarcas);
+                migrado.marcas = porMigrar;
             }
+            if (data.tableName === 'dispositivos_celulares'){
+                const responseModelos = await sendHttpRequestDRSIM(data.url); 
+                porMigrar = await saveDataFromApiModelos(connection, data, responseModelos);
+                migrado.modelos = porMigrar;
+            }
+            
         }              
         return migrado;
         
