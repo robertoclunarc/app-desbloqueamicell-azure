@@ -207,7 +207,7 @@ async function createCheckoutSession(connection, postRequest) {
             }
         } if (tool) {
             const timestamp = Date.now();
-            const session = checkoutStripe(timestamp)
+            // const session = checkoutStripe(timestamp)
             const helcim = createCheckoutHelcim()
 
             if (helcim.checkoutToken) {
