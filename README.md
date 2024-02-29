@@ -33,4 +33,8 @@
             id_service: number, 
             imei: number, 
             email: string 
-        } 
+        }
+    POST https://desbloqueamicell.azure-api.net/backend/httpTriggerBackendDesbloqueamicell?endpoint=InitializeHelcimPay
+        { 
+            precio: number, 
+        }     

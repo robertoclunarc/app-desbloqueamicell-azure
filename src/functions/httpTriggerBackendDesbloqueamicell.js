@@ -12,7 +12,7 @@ const DBHOST = process.env.DBHOST;
 const DBUSER = process.env.DBUSER;
 const DBPASSW = process.env.DBPASSW;
 const DBNAME = process.env.DBNAME;
-const HELCIMAPITOKEN = process.env.HELCIMAPITOKEN
+const HELCIMAPITOKEN = process.env.HELCIMAPITOKEN;
 
 const stripe = Stripe(STRIPESECRETKEY);
 
@@ -58,13 +58,19 @@ app.http('httpTriggerBackendDesbloqueamicell', {
                 case "POST":
                     const requestDataPost = JSON.parse(await request.text());
                     if (requestDataPost) {
-                        if (endPoint && endPoint == 'create-checkout-session') {
+                        if (endPoint && endPoint === 'create-checkout-session') {
                             const createSession = await createCheckoutSession(connection, requestDataPost);
                             console.log(createSession);
                             context.res = {
                                 body: JSON.stringify(createSession),
                                 statusCode: 200,
                             };
+                        } else if (endPoint && endPoint === 'InitializeHelcimPay') {
+                            const resultInsert = await InitializeHelcimPay(requestDataPost.precio);
+                            context.res = {
+                                body: JSON.stringify(resultInsert),
+                                statusCode: 200,
+                            };  
                         } else {
                             const resultInsert = await saveData(connection, requestDataPost, tab);
                             context.res = {
@@ -207,8 +213,8 @@ async function createCheckoutSession(connection, postRequest) {
             }
         } if (tool) {
             const timestamp = Date.now();
-            // const session = checkoutStripe(timestamp)
-            const helcim = createCheckoutHelcim()
+            // const session = checkoutStripe(timestamp, tool, postRequest.urlDomain);
+            const helcim = InitializeHelcimPay(tool.price);
 
             if (helcim.checkoutToken) {
                 const hoy = await formatDateString(timestamp);
@@ -242,7 +248,12 @@ async function createCheckoutSession(connection, postRequest) {
     }
 }
 
-const checkoutStripe = async (timestamp) => {
+const checkoutStripe = async (timestamp, tool, urlDomain) => {
+    const producto = await stripe.products.create({
+        name: tool.name,
+        description: tool.service_name,
+    });
+
     const precio = await stripe.prices.create({
         product: producto.id,
         unit_amount: parseInt(tool.price * 100),
@@ -257,8 +268,8 @@ const checkoutStripe = async (timestamp) => {
             },
         ],
         mode: 'payment',
-        success_url: `${postRequest.urlDomain}/${timestamp}`,
-        cancel_url: `${postRequest.urlDomain}/cancel`,
+        success_url: `${urlDomain}/${timestamp}`,
+        cancel_url: `${urlDomain}/cancel`,
     });
     return session;
 }
@@ -391,7 +402,7 @@ async function saveDataFromAPI(connection) {
     }
 }
 
-const createCheckoutHelcim = async precio => {
+const InitializeHelcimPay = async (precio) => {
     const payload = {
         method: 'POST',
         headers: {
@@ -401,7 +412,7 @@ const createCheckoutHelcim = async precio => {
         },
         body: JSON.stringify({ paymentType: 'purchase', amount: precio, currency: 'USD' })
     }
-
+    console.log(HELCIMAPITOKEN);
     axios.post('https://api.helcim.com/v2/helcim-pay/initialize', payload)
         .then(response => {
             console.log(response)
@@ -412,5 +423,4 @@ const createCheckoutHelcim = async precio => {
             console.error(err)
             return err
         });
-
 }
