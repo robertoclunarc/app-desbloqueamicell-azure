@@ -12,7 +12,7 @@ const DBHOST = process.env.DBHOST;
 const DBUSER = process.env.DBUSER;
 const DBPASSW = process.env.DBPASSW;
 const DBNAME = process.env.DBNAME;
-const HELCIMAPITOKEN = process.env.HELCIMAPITOKEN;
+const HELCIMAPITOKEN = 'aCtZYoA02Hl#MNL.6b#gmL_m#hwnRKrebLW7gTcaBzuRUvZv6WA_Rlb5fBGAZmNC';//process.env.HELCIMAPITOKEN;
 
 const stripe = Stripe(STRIPESECRETKEY);
 
@@ -412,15 +412,15 @@ const InitializeHelcimPay = async (precio) => {
         },
         body: JSON.stringify({ paymentType: 'purchase', amount: precio, currency: 'USD' })
     }
-    console.log(HELCIMAPITOKEN);
+    console.log(payload);
     axios.post('https://api.helcim.com/v2/helcim-pay/initialize', payload)
         .then(response => {
-            console.log(response)
+            console.log('ACCEPTADO');
             return response
         }
         )
         .catch(err => {
-            console.error(err)
+            console.error({status: err.response.status, errorText: err.response.statusText});
             return err
         });
 }
