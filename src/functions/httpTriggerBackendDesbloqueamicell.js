@@ -403,6 +403,7 @@ async function saveDataFromAPI(connection) {
 }
 
 const InitializeHelcimPay = async (precio) => {
+    ///inicioalizar helcim
     const payload = {
         method: 'POST',
         headers: {
