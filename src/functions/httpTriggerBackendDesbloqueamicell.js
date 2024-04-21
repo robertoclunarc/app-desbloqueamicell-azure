@@ -12,7 +12,7 @@ const DBHOST = process.env.DBHOST;
 const DBUSER = process.env.DBUSER;
 const DBPASSW = process.env.DBPASSW;
 const DBNAME = process.env.DBNAME;
-const HELCIMAPITOKEN = 'aCtZYoA02Hl#MNL.6b#gmL_m#hwnRKrebLW7gTcaBzuRUvZv6WA_Rlb5fBGAZmNC';//process.env.HELCIMAPITOKEN;
+const HELCIMAPITOKEN = process.env.HELCIMAPITOKEN;
 
 const stripe = Stripe(STRIPESECRETKEY);
 
@@ -403,25 +403,23 @@ async function saveDataFromAPI(connection) {
 }
 
 const InitializeHelcimPay = async (precio) => {
-    ///inicioalizar helcim
-    const payload = {
-        method: 'POST',
-        headers: {
-            accept: 'application/json',
-            'api-token': HELCIMAPITOKEN,
-            'content-type': 'application/json'
-        },
-        body: JSON.stringify({ paymentType: 'purchase', amount: precio, currency: 'USD' })
+    try {
+        // Inicializar helcim
+        const payload = {
+            headers: {
+                "accept": "*/*",
+                "api-token": `${HELCIMAPITOKEN}`,
+                "content-type": "application/json"
+            },
+            body: JSON.stringify({ paymentType: "purchase", amount: precio, currency: "USD" })
+        };
+        console.log(payload);
+        const response = await axios.post('https://api.helcim.com/v2/helcim-pay/initialize', payload);
+
+        console.log('ACCEPTADO', response.data);
+        return response.data;
+    } catch (error) {
+        console.error({ status: error.response.status, errorText: error.response.statusText });
+        throw error;
     }
-    console.log(payload);
-    axios.post('https://api.helcim.com/v2/helcim-pay/initialize', payload)
-        .then(response => {
-            console.log('ACCEPTADO');
-            return response
-        }
-        )
-        .catch(err => {
-            console.error({status: err.response.status, errorText: err.response.statusText});
-            return err
-        });
-}
+};
